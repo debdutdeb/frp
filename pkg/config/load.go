@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"maps"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
@@ -83,11 +84,24 @@ func DetectLegacyINIFormatFromFile(path string) bool {
 }
 
 func RenderWithTemplate(in []byte, values *Values) ([]byte, error) {
+	randString := func(n int) string {
+		// we don't need anything beyond "naive"
+		var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+		s := make([]rune, n)
+		for i := range s {
+			s[i] = letters[rand.Intn(len(letters))]
+		}
+
+		return string(s)
+	}
+
 	funcMap := sprig.FuncMap()
 
 	maps.Copy(funcMap, template.FuncMap{
 		"parseNumberRange":     parseNumberRange,
 		"parseNumberRangePair": parseNumberRangePair,
+		"randString":           randString,
 	})
 
 	tmpl, err := template.New("frp").Funcs(funcMap).Parse(string(in))
